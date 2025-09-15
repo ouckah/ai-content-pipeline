@@ -315,19 +315,6 @@ Conversation History:
                     if parts:
                         tool_name = parts[0]
                         
-                        # File tool
-                        if tool_name == "file" and len(parts) >= 3:
-                            action, path = parts[1], parts[2]
-                            content = " ".join(parts[3:]) if len(parts) > 3 else ""
-                            result = self.use_tool("file", action=action, path=path, content=content)
-                            print(f"Tool result: {result}")
-                        
-                        # Search tool
-                        elif tool_name == "search" and len(parts) >= 2:
-                            query = " ".join(parts[1:])
-                            result = self.use_tool("search", query=query)
-                            print(f"Tool result: {result}")
-                        
                         # Text generation tool
                         elif tool_name == "text" and len(parts) >= 2:
                             task = parts[1]
