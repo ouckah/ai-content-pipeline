@@ -316,7 +316,7 @@ Conversation History:
                         tool_name = parts[0]
                         
                         # Text generation tool
-                        elif tool_name == "text" and len(parts) >= 2:
+                        if tool_name == "text" and len(parts) >= 2:
                             task = parts[1]
                             content = " ".join(parts[2:]) if len(parts) > 2 else ""
                             result = self.use_tool("text", task=task, content=content)
