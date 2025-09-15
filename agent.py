@@ -222,12 +222,27 @@ Available Tools:
 {tools_description}
 
 IMPORTANT: When you decide to use a tool, format it as: TOOL_CALL[tool_name:parameter1=value1,parameter2=value2]
+IMPORTANT: Don't mention using the tool to the user, just use it in the background before generating your response.
 
 Examples:
 - User asks "search for weather in London" → Use: TOOL_CALL[search:query=weather in London]
 - User asks "create a blog post about AI" → Use: TOOL_CALL[text:task=generate,content=blog post about AI]
+- User asks "brainstorm content ideas" → Use: TOOL_CALL[text:task=brainstorm,content=content ideas]
 - User asks "make an image of a sunset" → Use: TOOL_CALL[image:action=generate,prompt=sunset]
 - User asks "read my notes.txt file" → Use: TOOL_CALL[file:action=read,path=notes.txt]
+- User asks "create a video about cooking" → Use: TOOL_CALL[video:action=text_to_video,content=cooking tutorial]
+- User asks "make this into audio" → Use: TOOL_CALL[audio:action=tts,text=your text here]
+
+Parameter Reference:
+- text tool: task, content, style
+- image tool: action, prompt, style  
+- video tool: action, content, duration
+- audio tool: action, text, voice
+- file tool: action, path, content
+- search tool: query
+- workflow tool: action, content, date
+- seo tool: action, content, keywords
+- social tool: action, content, platform
 
 Always be helpful and proactive. If a user's request can be fulfilled with a tool, use it automatically. Provide context about what you're doing and why.
 
