@@ -214,14 +214,24 @@ class AIAgent:
         if self.model:
             try:
                 # Create context with conversation history and available tools
-                context = f"""You are an AI assistant with access to these tools:
-{', '.join(f'{name}: {tool.description}' for name, tool in self.tools.items())}
+                tools_description = '\n'.join([f"- {name}: {tool.description}" for name, tool in self.tools.items()])
+                
+                context = f"""You are an AI content creation assistant with access to powerful tools. When a user requests something that would benefit from using a tool, automatically use it by including the tool call in your response.
 
-To use a tool, tell the user to use the command format:
-- /file read|write|list <path> [content]
-- /search <query>
+Available Tools:
+{tools_description}
 
-Conversation history:
+IMPORTANT: When you decide to use a tool, format it as: TOOL_CALL[tool_name:parameter1=value1,parameter2=value2]
+
+Examples:
+- User asks "search for weather in London" → Use: TOOL_CALL[search:query=weather in London]
+- User asks "create a blog post about AI" → Use: TOOL_CALL[text:task=generate,content=blog post about AI]
+- User asks "make an image of a sunset" → Use: TOOL_CALL[image:action=generate,prompt=sunset]
+- User asks "read my notes.txt file" → Use: TOOL_CALL[file:action=read,path=notes.txt]
+
+Always be helpful and proactive. If a user's request can be fulfilled with a tool, use it automatically. Provide context about what you're doing and why.
+
+Conversation History:
 """
                 # Add recent messages to context
                 for msg in self.messages[-5:]:  # Last 5 messages for context
@@ -230,6 +240,9 @@ Conversation history:
                 # Generate response using Gemini
                 response = self.model.generate_content(context + f"\nUser: {message}\nAssistant:")
                 ai_response = response.text.strip()
+                
+                # Check if the response contains tool calls and execute them
+                ai_response = self._process_tool_calls(ai_response)
                 
             except Exception as e:
                 ai_response = f"Error with Gemini API: {str(e)}\nAvailable tools: {', '.join(self.tools.keys())}"
@@ -240,6 +253,46 @@ Conversation history:
         
         self.messages.append({"role": "assistant", "content": ai_response})
         return ai_response
+    
+    def _process_tool_calls(self, response: str) -> str:
+        """Process and execute tool calls in the AI response."""
+        import re
+        
+        # Find all tool calls in the format TOOL_CALL[tool_name:param1=value1,param2=value2]
+        tool_pattern = r'TOOL_CALL\[([^:]+):([^\]]+)\]'
+        matches = re.findall(tool_pattern, response)
+        
+        processed_response = response
+        
+        for tool_name, params_str in matches:
+            try:
+                # Parse parameters
+                params = {}
+                if params_str.strip():
+                    for param_pair in params_str.split(','):
+                        if '=' in param_pair:
+                            key, value = param_pair.split('=', 1)
+                            params[key.strip()] = value.strip()
+                
+                # Execute the tool
+                result = self.use_tool(tool_name.strip(), **params)
+                
+                # Replace the tool call with the result
+                tool_call_text = f"TOOL_CALL[{tool_name}:{params_str}]"
+                processed_response = processed_response.replace(
+                    tool_call_text, 
+                    f"\n**Tool Result ({tool_name}):** {result}\n"
+                )
+                
+            except Exception as e:
+                # Replace with error message
+                tool_call_text = f"TOOL_CALL[{tool_name}:{params_str}]"
+                processed_response = processed_response.replace(
+                    tool_call_text, 
+                    f"\n**Tool Error ({tool_name}):** {str(e)}\n"
+                )
+        
+        return processed_response
     
     def run(self) -> None:
         """Run interactive chat."""
