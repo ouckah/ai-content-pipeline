@@ -1,0 +1,5 @@
+# Basic AI Agent Dependencies
+google-generativeai>=0.3.0  # For Gemini API
+openai>=1.0.0  # For OpenAI API (optional)
+requests>=2.31.0  # For HTTP requests
+python-dotenv>=1.0.0  # For loading .env files
